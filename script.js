@@ -121,10 +121,51 @@ document.addEventListener('DOMContentLoaded', function() {
                     behavior: 'smooth',
                     block: 'start'
                 });
+                // set active class immediately on click
+                document.querySelectorAll('.nav-link.active').forEach(n => n.classList.remove('active'));
+                if (this.classList.contains('nav-link')) this.classList.add('active');
             }
         });
     });
+
+    // Highlight nav items as sections enter the viewport
+    setupSectionObserver();
 });
+
+// Observe sections and update .nav-link.active based on visibility
+function setupSectionObserver() {
+    const sections = Array.from(document.querySelectorAll('section[id]'));
+    if (!sections.length) return;
+
+    const navLinks = (id) => document.querySelector(`.nav-link[href="#${id}"]`);
+
+    // We want a section to become active when at least 50% of it is visible.
+    // Use a dense threshold array so the intersectionRatio is granular, and
+    // account for the sticky header height when computing the rootMargin.
+    const header = document.querySelector('.header');
+    const headerH = header ? header.offsetHeight : 0;
+    const thresholds = [];
+    for (let i = 0; i <= 100; i++) thresholds.push(i/100);
+
+    const observer = new IntersectionObserver(entries => {
+        // find entries where at least 50% of the section is visible
+        const visibleHalf = entries.filter(e => e.intersectionRatio >= 0.5);
+        if (visibleHalf.length) {
+            // choose the one with the largest visible area
+            visibleHalf.sort((a,b) => b.intersectionRatio - a.intersectionRatio);
+            const id = visibleHalf[0].target.id;
+            document.querySelectorAll('.nav-link.active').forEach(n => n.classList.remove('active'));
+            const link = navLinks(id);
+            if (link) link.classList.add('active');
+            return;
+        }
+
+        // If none reach 50%, clear active state (avoids incorrect highlights)
+        document.querySelectorAll('.nav-link.active').forEach(n => n.classList.remove('active'));
+    }, { root: null, rootMargin: `-${headerH}px 0px -${headerH}px 0px`, threshold: thresholds });
+
+    sections.forEach(s => observer.observe(s));
+}
 
 // Render services
 function renderServices() {

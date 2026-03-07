@@ -183,17 +183,12 @@ function handleFormSubmit(e) {
         'entry.912507633': description
     };
 
-    // For static hosting (GitHub Pages) we cannot use an iframe due to
-    // Google's CSP frame-ancestors policy. Submit by opening the POST in
-    // a new tab which performs a normal form POST to Google (no server
-    // required). This keeps the site static and avoids CORS/framing errors.
+    // Submit via hidden iframe (avoids CORS and keeps user on page)
     setFormLoading(form, true);
-    // Open submission in a new tab (user stays on your site)
-    submitGoogleForm(values, true);
-    // Immediately clear loading and show a success notice — we cannot
-    // detect Google's server-side success from a new tab submission.
-    setFormLoading(form, false);
-    showFormSuccess(form, 'Submission opened in a new tab.');
+    submitGoogleForm(values, false, () => {
+        setFormLoading(form, false);
+        showFormSuccess(form, 'Thank you — your quote request was submitted.');
+    });
 
     // reset form inputs (keep visual feedback visible)
     form.reset();

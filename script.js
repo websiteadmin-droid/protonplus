@@ -190,7 +190,7 @@ function handleFormSubmit(e) {
         setFormLoading(form, true);
         postToProxy(values).then(ok => {
             setFormLoading(form, false);
-            if (ok) showFormSuccess(form, 'Thank you — your quote request was submitted.');
+            if (ok) showFormSuccess(form, 'Thank you.');
             else showFormSuccess(form, 'Submission failed — please try again.');
         }).catch(() => {
             setFormLoading(form, false);
@@ -203,7 +203,7 @@ function handleFormSubmit(e) {
     setFormLoading(form, true);
     submitGoogleForm(values, false, () => {
         setFormLoading(form, false);
-        showFormSuccess(form, 'Thank you — your quote request was submitted.');
+        showFormSuccess(form, 'Thank you.');
     });
     form.reset();
 }
@@ -293,17 +293,56 @@ function setFormLoading(form, isLoading) {
 }
 
 function showFormSuccess(form, message) {
-    let status = form.querySelector('.form-status');
-    if (!status) {
-        status = document.createElement('div');
-        status.className = 'form-status';
-        status.style.marginTop = '0.75rem';
-        status.style.fontSize = '0.95rem';
-        form.appendChild(status);
+    // Show a centered popup instead of an inline message
+    showPopup(message || 'Request submitted — thank you!', false);
+}
+
+// Global popup/toast helper shown in the center of the viewport
+function showPopup(message, isError = false, autoHideMs = 4000) {
+    // Prevent multiple popups stacking
+    if (document.querySelector('.gform-popup-overlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'gform-popup-overlay';
+    Object.assign(overlay.style, {
+        position: 'fixed', left: '0', top: '0', right: '0', bottom: '0',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(11,35,64,0.35)', zIndex: 9999
+    });
+
+    const box = document.createElement('div');
+    box.className = 'gform-popup-box';
+    Object.assign(box.style, {
+        background: '#fff', padding: '20px 22px', borderRadius: '8px',
+        boxShadow: '0 8px 24px rgba(11,35,64,0.18)', maxWidth: '420px',
+        width: '90%', textAlign: 'center', fontFamily: 'Inter, system-ui, -apple-system, Roboto, "Segoe UI", Arial'
+    });
+
+    const title = document.createElement('div');
+    title.textContent = isError ? 'Error' : 'Enquiry submitted successfully';
+    Object.assign(title.style, { fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: isError ? '#C0392B' : '#0b8f4a' });
+
+    const msg = document.createElement('div');
+    msg.innerText = message;
+    Object.assign(msg.style, { fontSize: '14px', color: '#0b2340', marginBottom: '12px' });
+
+    const btn = document.createElement('button');
+    btn.textContent = 'Close';
+    Object.assign(btn.style, {
+        padding: '8px 14px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+        background: isError ? '#C0392B' : '#0b8f4a', color: '#fff', fontWeight: 600
+    });
+    btn.addEventListener('click', () => { overlay.remove(); });
+
+    box.appendChild(title);
+    box.appendChild(msg);
+    box.appendChild(btn);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    if (autoHideMs && autoHideMs > 0) {
+        setTimeout(() => { overlay.remove(); }, autoHideMs);
     }
-    status.innerHTML = '<strong style="color:#0b8f4a">' + (message || 'Request submitted — thank you!') + '</strong>';
-    // remove success after a short delay
-    setTimeout(() => { status.innerHTML = ''; }, 5000);
 }
 
 // Intersection Observer for animations

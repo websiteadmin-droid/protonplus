@@ -183,14 +183,28 @@ function handleFormSubmit(e) {
         'entry.912507633': description
     };
 
-    // Submit via hidden iframe (avoids CORS and keeps user on page)
+    // Prefer a serverless proxy when available so we can submit silently
+    // and keep the user on your site. Set window.GFORM_PROXY_URL to the
+    // deployed proxy URL (Apps Script, Cloudflare Worker, Netlify Function).
+    if (window.GFORM_PROXY_URL) {
+        setFormLoading(form, true);
+        postToProxy(values).then(ok => {
+            setFormLoading(form, false);
+            if (ok) showFormSuccess(form, 'Thank you — your quote request was submitted.');
+            else showFormSuccess(form, 'Submission failed — please try again.');
+        }).catch(() => {
+            setFormLoading(form, false);
+            showFormSuccess(form, 'Submission failed — please try again.');
+        }).finally(() => form.reset());
+        return;
+    }
+
+    // Fallback: submit via hidden iframe (may be blocked by Google CSP).
     setFormLoading(form, true);
     submitGoogleForm(values, false, () => {
         setFormLoading(form, false);
         showFormSuccess(form, 'Thank you — your quote request was submitted.');
     });
-
-    // reset form inputs (keep visual feedback visible)
     form.reset();
 }
 
@@ -236,6 +250,25 @@ function submitGoogleForm(values, openInNewTab = false, onLoadCallback) {
     document.body.appendChild(form);
     form.submit();
     form.remove();
+}
+
+// Post to a configured serverless proxy that forwards to Google Forms.
+// The proxy should accept JSON with entry.* keys and return 2xx on success.
+async function postToProxy(values) {
+    if (!window.GFORM_PROXY_URL) throw new Error('GFORM_PROXY_URL not set');
+    try {
+        const resp = await fetch(window.GFORM_PROXY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(values)
+        });
+        if (resp.ok) return true;
+        try { const t = await resp.text(); console.warn('Proxy error', resp.status, t.slice(0,200)); } catch(e){}
+        return false;
+    } catch (err) {
+        console.error('postToProxy error', err);
+        return false;
+    }
 }
 
 // UI helpers: show loading state and success message inside the form

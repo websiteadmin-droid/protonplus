@@ -949,14 +949,15 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 
 @media (min-width: 768px) {
     .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.15rem;
     }
 }
 
 .stat-item {
     text-align: center;
-    padding: 1rem 0.75rem;
-    border-right: 1px solid rgba(255,255,255,0.1);
+    padding: 0.5rem 0.5rem;
+    border-right: 1px solid rgba(255,255,255,0.08);
 }
 
 .stat-item:last-child {
@@ -964,16 +965,16 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 
 .stat-number {
-    font-size: 1.6rem;
-    font-weight: 300;
+    font-size: 1.25rem;
+    font-weight: 400;
     color: hsl(0, 0%, 100%);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.02em;
 }
-
 .stat-label {
     color: hsl(210, 40%, 75%);
-    font-size: 0.85rem;
-    letter-spacing: 0.04em;
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
 }
 
 /* Contact Section */
@@ -1339,6 +1340,20 @@ html {
     object-fit: contain;
     opacity: 0.92;
     filter: grayscale(0.05) contrast(0.95);
+    display: block;
+}
+
+/* Add subtle grey panel only for specific light logos so they remain visible */
+.trusted-logos img.electricai,
+.trusted-logos img.polarity,
+.trusted-logos img.samarath {
+    background: #2f2f2f;
+    padding: 6px 8px;
+    border-radius: 6px;
+}
+
+@media (max-width: 640px) {
+    .trusted-logos img { max-width: 90px; max-height: 40px; }
 }
 
 @media (min-width: 1024px) {

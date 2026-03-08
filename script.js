@@ -105,6 +105,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Render services
     renderServices();
+    // Shuffle the grey-panel trusted logos (electricai, polarity, samarath)
+    shuffleTrustedGrey();
 
     // Handle form submission for any quote form on the page
     document.querySelectorAll('.quote-form').forEach(form => {
@@ -419,6 +421,36 @@ function animateValue(el, start, end, duration, suffix) {
         }
     };
     requestAnimationFrame(step);
+}
+
+// Shuffle the three grey-panel logos so their order is randomized on each page load
+function shuffleTrustedGrey() {
+    const container = document.querySelector('.trusted-logos');
+    if (!container) return;
+
+    const greySelectors = ['img.electricai', 'img.polarity', 'img.samarath'];
+    const greyNodes = greySelectors.map(s => container.querySelector(s)).filter(Boolean);
+    if (greyNodes.length < 2) return; // nothing to shuffle
+
+    // Collect other (non-grey) children
+    const others = Array.from(container.querySelectorAll('img')).filter(img => !greyNodes.includes(img));
+
+    // Fisher-Yates shuffle greyNodes
+    for (let i = greyNodes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [greyNodes[i], greyNodes[j]] = [greyNodes[j], greyNodes[i]];
+    }
+
+    // Merge by inserting each grey node at a random index among the others
+    const merged = others.slice();
+    greyNodes.forEach(g => {
+        const idx = Math.floor(Math.random() * (merged.length + 1));
+        merged.splice(idx, 0, g);
+    });
+
+    // Rebuild container content in the new order
+    container.innerHTML = '';
+    merged.forEach(node => container.appendChild(node));
 }
 
 // Observe stats grid and animate counters once visible
